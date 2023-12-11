@@ -1,19 +1,21 @@
 # DATA MODELS AND DATABASE MANAGEMENT SYSTEMS
-## Radyukevich Alina Igorevna, 153502
-## Cleaning company
+## Demeshkevich Pavel Andreevich, 153501
+### Cleaning service - Cleanix
+
+### Used technologies
+
+- FastAPI application
+- PostgreSQL database
+- aiosql wrapper over asyncpg database driver
 
 ### Functional requirements
 
-* User authorization
-* User managment (CRUD)
-* Role system
-* Logging user actions
-* Orders managment
-* Service management
-* Transport management
-* Statistics
-* Instrument managment (CRUD)
-* Feedback manegment (CRUD)
+- Crud operations over Entities: Companies, Feedbacks, Transports, Clients, Orders, Tools, Employees and Services
+- Client Authentication through JSON WEB TOKENS
+- Role-based authorization system with three possible roles (Client, Employee, Manager)
+- Collecting statistics about users activity
+- Three-staged order-processing
+-------------------------------
 
 ## Informological system
 ![image](https://github.com/Linyshka/DB/assets/92429718/d9405a2d-a7c7-4784-96ec-408040b4d01f)
