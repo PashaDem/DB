@@ -22,7 +22,7 @@ async def app_lifespan(app: FastAPI) -> AsyncGenerator:
         host=app_config.postgres_host,
         port=app_config.postgres_port,
         user=app_config.postgres_user,
-        password=app_config.postgres_pass,
+        password=app_config.postgres_password,
         database=app_config.postgres_db,
     )
     with open(app_config.sql_init_path, "r") as queries:

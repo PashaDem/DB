@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.11.9-slim
 
 ENV DST=/cleanix \
     POETRY_VIRTUALENVS_CREATE=false \

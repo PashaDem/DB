@@ -6,7 +6,7 @@ class AppConfig(BaseSettings):
     postgres_host: str = Field("postgres", env="POSTGRES_HOST")
     postgres_port: int = Field(5432, env="POSTGRES_PORT")
     postgres_user: str
-    postgres_pass: str
+    postgres_password: str
     postgres_db: str
 
     sql_queries_path: str = Field("/cleanix/sql", env="SQL_PATH")
