@@ -6,13 +6,13 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5431:5431"
   app:
     build:
       context: cleanix/
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8001:8001"
     volumes:
       - ./cleanix:/cleanix
     env_file:
