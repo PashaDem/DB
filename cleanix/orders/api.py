@@ -136,7 +136,7 @@ async def mark_order_as_in_process(
         order_id: int,
         db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
 ):
-    """нельзя пометить как в процессе, потому что если заказ уже оплачен, то что-то менять в нем нельзя"""
+    """Заказ помечается, как IN_PROCESS, когда сотрудники начинают оказывать услуги"""
     db, conn = db_factory
     raw_order = await db.get_order_by_id(conn, order_id=order_id)
     if not raw_order:
