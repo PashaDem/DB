@@ -9,12 +9,10 @@ services:
       - "5431:5431"
   app:
     build:
-      context: cleanix/
+      context: .
       dockerfile: Dockerfile
     ports:
       - "8001:8001"
-    volumes:
-      - ./cleanix:/cleanix
     env_file:
       - .env
 
