@@ -7,6 +7,8 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5431:5431"
+    restart: always
+
   app:
     build:
       context: .
@@ -15,7 +17,7 @@ services:
       - "8001:8001"
     env_file:
       - .env
-
+    restart: always
 
 volumes:
   pgdata:
