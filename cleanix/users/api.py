@@ -130,4 +130,7 @@ async def get_user_info(
     if not user_dict.get("role", None):
         user_dict['role'] = RolesEnum.CLIENT
 
+    if not user_dict.get("left_feedback", None):
+        user_dict['left_feedback'] = False
+
     return user_dict

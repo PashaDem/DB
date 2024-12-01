@@ -60,3 +60,4 @@ class UserInfo(BaseModel):
     username: str
     is_active: bool
     is_employee: bool
+    left_feedback: bool

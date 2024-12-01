@@ -36,10 +36,12 @@ select u.id as id,
        u.contact_phone as contact_phone,
        u.username as username,
        u.is_active as is_active,
-       u.is_employee as is_employee
+       u.is_employee as is_employee,
+       s.left_feedback as left_feedback
 from public.user u
 left join public.employee e on u.id = e.id
 left join public.client c on c.id = u.id
+left join public.statistics s on s.id = c.statistics_id
 where u.id = :user_id;
 
 -- name: block_user_by_id!
