@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from users import user_router
 from core.transport import transport_router
 from orders import order_router
-
+from fastapi.middleware.cors import CORSMiddleware
 
 # lifespan
 @asynccontextmanager
@@ -33,6 +33,7 @@ async def app_lifespan(app: FastAPI) -> AsyncGenerator:
 
 app = FastAPI(lifespan=app_lifespan)
 
+app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_credentials=True, allow_method=['*'], allow_headers=['*'])
 
 app.include_router(auth_router, prefix="/auth")
 app.include_router(user_router, prefix="/users")
