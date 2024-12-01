@@ -14,8 +14,8 @@ transport_router = APIRouter()
 
 @transport_router.post("/", dependencies=[Depends(get_manager)])
 async def create_transport(
-        payload: TransportInput,
-        db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    payload: TransportInput,
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
 ) -> Transport:
     db, conn = db_factory
     if await db.get_transport_by_name(conn, transport_name=payload.name):
@@ -30,9 +30,9 @@ async def create_transport(
 
 @transport_router.put("/{transport_id}", dependencies=[Depends(get_manager)])
 async def modify_transport(
-        transport_id: int,
-        payload: TransportInput,
-        db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    transport_id: int,
+    payload: TransportInput,
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
 ) -> Transport:
     db, conn = db_factory
     raw_transport = await db.get_transport_by_id(conn, transport_id=transport_id)
@@ -49,16 +49,18 @@ async def modify_transport(
 
     transport_dict.update(payload.model_dump())
 
-    await db.update_transport_by_id(conn, transport_id=transport_id, **payload.model_dump())
+    await db.update_transport_by_id(
+        conn, transport_id=transport_id, **payload.model_dump()
+    )
     new_transport = await db.get_transport_by_id(conn, transport_id=transport_id)
     return dict(new_transport.items())
 
 
 @transport_router.post("/{transport_id}", dependencies=[Depends(get_manager)])
 async def deregister_transport(
-        transport_id: int,
-        db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
-        response: Response,
+    transport_id: int,
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    response: Response,
 ) -> None:
     db, conn = db_factory
     raw_transport = await db.get_transport_by_id(conn, transport_id=transport_id)
@@ -71,7 +73,7 @@ async def deregister_transport(
 
 @transport_router.get("/")
 async def get_transports(
-        db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
 ) -> List[Transport]:
     db, conn = db_factory
     raw_transports = await db.get_transports(conn)
@@ -80,8 +82,8 @@ async def get_transports(
 
 @transport_router.get("/{transport_id}")
 async def get_transport(
-        transport_id: int,
-        db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    transport_id: int,
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
 ) -> Transport:
     db, conn = db_factory
     raw_transport = await db.get_transport_by_id(conn, transport_id=transport_id)

@@ -1,5 +1,5 @@
 from pydantic import Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
 
 class AppConfig(BaseSettings):
@@ -16,7 +16,7 @@ class AppConfig(BaseSettings):
 class AuthConfig(BaseSettings):
     secret_key: str
     algorithm: str = Field("HS256", env="ALGORITHM")
-    expiration_time_minutes: int = Field(60, env="EXPIRATION_TIME_MINUTES")
+    expiration_time_minutes: int = Field(60000000, env="EXPIRATION_TIME_MINUTES")
 
 
 auth_config = AuthConfig()

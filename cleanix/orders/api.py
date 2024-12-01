@@ -11,9 +11,23 @@ from core.transport.exception import TransportDoesNotExist
 from shared import queries
 from users.dependencies import get_client, get_manager
 from users.schema import Client, Employee
-from .dependencies import check_order_read_access, check_all_client_orders_read_access, check_order_delete_access, \
-    check_order_modify_access, check_order_assign_access, check_order_mark_in_process_access
-from .schema import OrderInput, Order, OrderToSave, ServiceIds, ServiceId, TransportId, ToolId
+from .dependencies import (
+    check_order_read_access,
+    check_all_client_orders_read_access,
+    check_order_delete_access,
+    check_order_modify_access,
+    check_order_assign_access,
+    check_order_mark_in_process_access,
+)
+from .schema import (
+    OrderInput,
+    Order,
+    OrderToSave,
+    ServiceIds,
+    ServiceId,
+    TransportId,
+    ToolId,
+)
 from .exception import OrderDoesNotExist
 
 order_router = APIRouter()
@@ -21,104 +35,144 @@ order_router = APIRouter()
 
 #  -----------------------------crud----------------------------------------------------------------
 
-@order_router.post('/', response_model=Order)
+
+@order_router.post("/", response_model=Order)
 async def create_order(
-        order_data: OrderInput,
-        client: Annotated[Client, Depends(get_client)],
-        db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    order_data: OrderInput,
+    client: Annotated[Client, Depends(get_client)],
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
 ):
     db, conn = db_factory
-    order_to_save = OrderToSave(**(order_data.model_dump() | {'client_id': client.id}))
+    order_to_save = OrderToSave(**(order_data.model_dump() | {"client_id": client.id}))
     raw_id = await db.insert_full_order(conn, **order_to_save.model_dump())
     await db.increment_order_count(conn, statistics_id=client.statistics_id)
-    order_id = dict(raw_id.items())['insert_full_order']
+    order_id = dict(raw_id.items())["insert_full_order"]
     raw_order = await db.get_order_by_id(conn, order_id=order_id)
     return dict(raw_order.items())
 
 
-@order_router.get('/{order_id}', response_model=Order, dependencies=[Depends(check_order_read_access)])
-async def get_order(order_id: int, db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)]):
+@order_router.get(
+    "/{order_id}", response_model=Order, dependencies=[Depends(check_order_read_access)]
+)
+async def get_order(
+    order_id: int, db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)]
+):
     db, conn = db_factory
     raw_order = await db.get_order_by_id(conn, order_id=order_id)
     return dict(raw_order.items())
 
 
-@order_router.get('/user/{user_id}', dependencies=[Depends(check_all_client_orders_read_access)],
-                  response_model=List[Order])
-async def get_orders(user_id: int, db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)]):
+@order_router.get(
+    "/user/{user_id}",
+    dependencies=[Depends(check_all_client_orders_read_access)],
+    response_model=List[Order],
+)
+async def get_orders(
+    user_id: int, db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)]
+):
     db, conn = db_factory
     raw_orders = await db.get_orders_by_user_id(conn, user_id=user_id)
     return [dict(raw_order.items()) for raw_order in raw_orders]
 
 
 @order_router.delete("/{order_id}", dependencies=[Depends(check_order_delete_access)])
-async def delete_order(order_id: int, db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
-                       response: Response):
-    db, conn = db_factory
-    raw_order = await db.get_order_by_id(conn, order_id=order_id)
-    order_dict = dict(raw_order.items())
-    if order_dict['status'] == 'INQUEUE':
-        await db.delete_order_by_id(conn, order_id=order_id)
-        await db.decrement_orders_count(conn, client_id=order_dict['client_id'])
-        response.status_code = status.HTTP_204_NO_CONTENT
-        return
-    else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Can't delete order with status other than 'INQUEUE'.")
-
-
-#  -----------------------------services-------------------------------------------------------------
-@order_router.post('/{order_id}/add_service', dependencies=[Depends(check_order_modify_access)])
-async def add_service_to_order(order_id: int, services_info: ServiceIds,
-                               db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
-                               response: Response) -> None:
-    db, conn = db_factory
-    raw_order = await db.get_order_by_id(conn, order_id=order_id)
-    order_dict = dict(raw_order.items())
-    if order_dict['status'] != 'PAID':
-        await db.append_services_to_order(conn, services=services_info.services, order_id=order_id)
-        response.status_code = status.HTTP_204_NO_CONTENT
-        return
-    raise HTTPException(detail="Can't add service for already paid orders.", status_code=status.HTTP_400_BAD_REQUEST)
-
-
-@order_router.post('/{order_id}/remove_service', dependencies=[Depends(check_order_modify_access)])
-async def remove_service_from_order(
-        order_id: int, service_info: ServiceId,
-        db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
-        response: Response,
+async def delete_order(
+    order_id: int,
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    response: Response,
 ):
     db, conn = db_factory
     raw_order = await db.get_order_by_id(conn, order_id=order_id)
     order_dict = dict(raw_order.items())
-    if order_dict['status'] != 'PAID':
-        await db.remove_service_from_order(conn, service_id=service_info.service_id, order_id=order_id)
+    if order_dict["status"] == "INQUEUE":
+        await db.delete_order_by_id(conn, order_id=order_id)
+        await db.decrement_orders_count(conn, client_id=order_dict["client_id"])
         response.status_code = status.HTTP_204_NO_CONTENT
         return
-    raise HTTPException(detail="Can't remove service for already paid orders.", status_code=status.HTTP_400_BAD_REQUEST)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Can't delete order with status other than 'INQUEUE'.",
+        )
+
+
+#  -----------------------------services-------------------------------------------------------------
+@order_router.post(
+    "/{order_id}/add_service", dependencies=[Depends(check_order_modify_access)]
+)
+async def add_service_to_order(
+    order_id: int,
+    services_info: ServiceIds,
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    response: Response,
+) -> None:
+    db, conn = db_factory
+    raw_order = await db.get_order_by_id(conn, order_id=order_id)
+    order_dict = dict(raw_order.items())
+    if order_dict["status"] != "PAID":
+        await db.append_services_to_order(
+            conn, services=services_info.services, order_id=order_id
+        )
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return
+    raise HTTPException(
+        detail="Can't add service for already paid orders.",
+        status_code=status.HTTP_400_BAD_REQUEST,
+    )
+
+
+@order_router.post(
+    "/{order_id}/remove_service", dependencies=[Depends(check_order_modify_access)]
+)
+async def remove_service_from_order(
+    order_id: int,
+    service_info: ServiceId,
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    response: Response,
+):
+    db, conn = db_factory
+    raw_order = await db.get_order_by_id(conn, order_id=order_id)
+    order_dict = dict(raw_order.items())
+    if order_dict["status"] != "PAID":
+        await db.remove_service_from_order(
+            conn, service_id=service_info.service_id, order_id=order_id
+        )
+        response.status_code = status.HTTP_204_NO_CONTENT
+        return
+    raise HTTPException(
+        detail="Can't remove service for already paid orders.",
+        status_code=status.HTTP_400_BAD_REQUEST,
+    )
 
 
 #  ----------------------order lifecycle-------------------------------------------------------------
 
 
-@order_router.post('/{order_id}/assign_order')
+@order_router.post("/{order_id}/assign_order")
 async def assign_order(
-        order_id: int, db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
-        response: Response,
-        employee: Annotated[Employee, Depends(check_order_assign_access)],
+    order_id: int,
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    response: Response,
+    employee: Annotated[Employee, Depends(check_order_assign_access)],
 ) -> None:
     db, conn = db_factory
     raw_order = await db.get_order_by_id(conn, order_id=order_id)
     if not raw_order:
         raise OrderDoesNotExist
     order_dict = dict(raw_order.items())
-    if order_dict['status'] == 'INQUEUE':
+    if order_dict["status"] == "INQUEUE":
         # сотрудник может принять заказ, только если тот не выполняется еще или не оплачен
         # ( оплата подразумевается после выполнения заказа )
-        raw_employee_id_list: List[Record] = await db.get_order_employees_by_order_id(conn, order_id=order_id)
-        employee_id_list: List[int] = [raw_id['employee_id'] for raw_id in raw_employee_id_list]
+        raw_employee_id_list: List[Record] = await db.get_order_employees_by_order_id(
+            conn, order_id=order_id
+        )
+        employee_id_list: List[int] = [
+            raw_id["employee_id"] for raw_id in raw_employee_id_list
+        ]
         if employee.id not in employee_id_list:
-            await db.assign_order_by_employee_id(conn, employee_id=employee.id, order_id=order_id)
+            await db.assign_order_by_employee_id(
+                conn, employee_id=employee.id, order_id=order_id
+            )
             response.status_code = status.HTTP_400_BAD_REQUEST
             return
         else:
@@ -127,14 +181,20 @@ async def assign_order(
                 detail="This employee is already assigned to the order.",
             )
 
-    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Can't assign paid order or that is processed.")
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Can't assign paid order or that is processed.",
+    )
 
 
-@order_router.post('/{order_id}/mark_as_in_process', response_model=Order,
-                   dependencies=[Depends(check_order_mark_in_process_access)])
+@order_router.post(
+    "/{order_id}/mark_as_in_process",
+    response_model=Order,
+    dependencies=[Depends(check_order_mark_in_process_access)],
+)
 async def mark_order_as_in_process(
-        order_id: int,
-        db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    order_id: int,
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
 ):
     """Заказ помечается, как IN_PROCESS, когда сотрудники начинают оказывать услуги"""
     db, conn = db_factory
@@ -143,8 +203,8 @@ async def mark_order_as_in_process(
         raise OrderDoesNotExist
     order_dict = dict(raw_order.items())
 
-    if not order_dict['status'] == 'PAID':
-        if not order_dict['status'] == 'INPROCESS':
+    if not order_dict["status"] == "PAID":
+        if not order_dict["status"] == "INPROCESS":
             await db.mark_order_as_in_process_by_order_id(conn, order_id=order_id)
             raw_order = await db.get_order_by_id(conn, order_id=order_id)
             return dict(raw_order.items())
@@ -158,11 +218,14 @@ async def mark_order_as_in_process(
     )
 
 
-@order_router.post('/{order_id}/mark_as_paid', response_model=Order,
-                   dependencies=[Depends(check_order_mark_in_process_access)])
+@order_router.post(
+    "/{order_id}/mark_as_paid",
+    response_model=Order,
+    dependencies=[Depends(check_order_mark_in_process_access)],
+)
 async def mark_order_as_paid(
-        order_id: int,
-        db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    order_id: int,
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
 ):
     """нельзя пометить как в процессе, потому что если заказ уже оплачен, то что-то менять в нем нельзя"""
     db, conn = db_factory
@@ -171,8 +234,8 @@ async def mark_order_as_paid(
         raise OrderDoesNotExist
     order_dict = dict(raw_order.items())
 
-    if not order_dict['status'] == 'PAID':
-        if order_dict['status'] == 'INPROCESS':
+    if not order_dict["status"] == "PAID":
+        if order_dict["status"] == "INPROCESS":
             await db.mark_order_as_paid_by_order_id(conn, order_id=order_id)
             await db.update_total_cost_by_order_id(conn, order_id=order_id)
             raw_order = await db.get_order_by_id(conn, order_id=order_id)
@@ -189,57 +252,84 @@ async def mark_order_as_paid(
 
 #  -----------------------------transport-------------------------------------------------------------
 
-@order_router.post('/{order_id}/add_transport', dependencies=[Depends(get_manager)])
-async def add_transport(order_id: int, transport_info: TransportId,
-                        db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)], response: Response):
+
+@order_router.post("/{order_id}/add_transport", dependencies=[Depends(get_manager)])
+async def add_transport(
+    order_id: int,
+    transport_info: TransportId,
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    response: Response,
+):
     db, conn = db_factory
     raw_order = await db.get_order_by_id(conn, order_id=order_id)
     if not raw_order:
         raise OrderDoesNotExist
 
-    does_transport_exist = await db.does_transport_exist(conn, transport_id=transport_info.transport_id)
+    does_transport_exist = await db.does_transport_exist(
+        conn, transport_id=transport_info.transport_id
+    )
     if does_transport_exist:
-        transport_ids: List[int] = [raw_transport['transport_id'] for raw_transport in
-                                    await db.get_all_order_transports(conn, order_id=order_id)]
+        transport_ids: List[int] = [
+            raw_transport["transport_id"]
+            for raw_transport in await db.get_all_order_transports(
+                conn, order_id=order_id
+            )
+        ]
         if transport_info.transport_id not in transport_ids:
-            await db.insert_transport_to_order(conn, order_id=order_id, transport_id=transport_info.transport_id)
+            await db.insert_transport_to_order(
+                conn, order_id=order_id, transport_id=transport_info.transport_id
+            )
             response.status_code = status.HTTP_204_NO_CONTENT
             return
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="This transport has already been added to the order.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This transport has already been added to the order.",
+        )
     raise TransportDoesNotExist
 
 
-@order_router.post('/{order_id}/remove_transport', dependencies=[Depends(get_manager)])
-async def remove_transport(order_id: int, transport_info: TransportId,
-                           db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)], response: Response):
+@order_router.post("/{order_id}/remove_transport", dependencies=[Depends(get_manager)])
+async def remove_transport(
+    order_id: int,
+    transport_info: TransportId,
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    response: Response,
+):
     db, conn = db_factory
     raw_order = await db.get_order_by_id(conn, order_id=order_id)
     if not raw_order:
         raise OrderDoesNotExist
 
-    does_transport_exist = await db.does_transport_exist(conn, transport_id=transport_info.transport_id)
+    does_transport_exist = await db.does_transport_exist(
+        conn, transport_id=transport_info.transport_id
+    )
     if does_transport_exist:
-        transport_ids: List[int] = [raw_transport['transport_id'] for raw_transport in
-                                    await db.get_all_order_transports(conn, order_id)]
+        transport_ids: List[int] = [
+            raw_transport["transport_id"]
+            for raw_transport in await db.get_all_order_transports(conn, order_id)
+        ]
         if transport_info.transport_id in transport_ids:
-            await db.remove_transport_from_order(conn, order_id=order_id, transport_id=transport_info.transport_id)
+            await db.remove_transport_from_order(
+                conn, order_id=order_id, transport_id=transport_info.transport_id
+            )
             response.status_code = status.HTTP_204_NO_CONTENT
             return
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="This transport isn't present in order.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This transport isn't present in order.",
+        )
     raise TransportDoesNotExist
 
 
 # -------------------------------------------tools-----------------------------------------------------------
 
 
-@order_router.post('/{order_id}/add_tool', dependencies=[Depends(get_manager)])
+@order_router.post("/{order_id}/add_tool", dependencies=[Depends(get_manager)])
 async def add_tool(
-        order_id: int,
-        tool_info: ToolId,
-        db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
-        response: Response,
+    order_id: int,
+    tool_info: ToolId,
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    response: Response,
 ):
     db, conn = db_factory
     raw_order = await db.get_order_by_id(conn, order_id=order_id)
@@ -248,20 +338,30 @@ async def add_tool(
 
     does_tool_exist = await db.does_tool_exist(conn, tool_id=tool_info.tool_id)
     if does_tool_exist:
-        tool_ids: List[int] = [raw_tool['tool_id'] for raw_tool in
-                                    await db.get_all_order_tools(conn, order_id)]
+        tool_ids: List[int] = [
+            raw_tool["tool_id"]
+            for raw_tool in await db.get_all_order_tools(conn, order_id)
+        ]
         if tool_info.tool_id not in tool_ids:
-            await db.insert_tool_to_order(conn, order_id=order_id, tool_id=tool_info.tool_id)
+            await db.insert_tool_to_order(
+                conn, order_id=order_id, tool_id=tool_info.tool_id
+            )
             response.status_code = status.HTTP_204_NO_CONTENT
             return
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="This tool has already been added to the order.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This tool has already been added to the order.",
+        )
     raise ToolDoesNotExist
 
 
-@order_router.post('/{order_id}/remove_tool', dependencies=[Depends(get_manager)])
-async def remove_tool(order_id: int, tool_info: ToolId,
-                           db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)], response: Response):
+@order_router.post("/{order_id}/remove_tool", dependencies=[Depends(get_manager)])
+async def remove_tool(
+    order_id: int,
+    tool_info: ToolId,
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    response: Response,
+):
     db, conn = db_factory
     raw_order = await db.get_order_by_id(conn, order_id=order_id)
     if not raw_order:
@@ -269,12 +369,18 @@ async def remove_tool(order_id: int, tool_info: ToolId,
 
     does_tool_exist = await db.does_tool_exist(conn, tool_id=tool_info.tool_id)
     if does_tool_exist:
-        tool_ids: List[int] = [raw_tool['tool_id'] for raw_tool in
-                                    await db.get_all_order_tools(conn, order_id)]
+        tool_ids: List[int] = [
+            raw_tool["tool_id"]
+            for raw_tool in await db.get_all_order_tools(conn, order_id)
+        ]
         if tool_info.tool_id in tool_ids:
-            await db.remove_tool_from_order(conn, order_id=order_id, tool_id=tool_info.tool_id)
+            await db.remove_tool_from_order(
+                conn, order_id=order_id, tool_id=tool_info.tool_id
+            )
             response.status_code = status.HTTP_204_NO_CONTENT
             return
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="This tool isn't present in order.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This tool isn't present in order.",
+        )
     raise ToolDoesNotExist

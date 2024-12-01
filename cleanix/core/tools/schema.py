@@ -1,9 +1,7 @@
 # TODO: remove is_archived from the model for service creation
 
-from decimal import Decimal
-from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class ToolInput(BaseModel):

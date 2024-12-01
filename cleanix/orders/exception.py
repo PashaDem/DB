@@ -10,4 +10,3 @@ class PermissionOwnerError(BaseCleanixException):
 
 class OrderDoesNotExist(ModelDoesNotExistError):
     detail = "Order does not exist."
-

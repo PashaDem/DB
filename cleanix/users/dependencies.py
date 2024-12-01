@@ -9,13 +9,17 @@ from fastapi import Depends, Header, HTTPException
 from jose import JWTError, jwt
 from shared import queries
 from starlette import status
-from users.exception import PermissionClientError, PermissionManagerError, PermissionWorkerError
+from users.exception import (
+    PermissionClientError,
+    PermissionManagerError,
+    PermissionWorkerError,
+)
 from users.schema import Client, Employee, User
 
 
 async def get_user_by_access_token(
-        authorization: Annotated[str | None, Header()],
-        db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    authorization: Annotated[str | None, Header()],
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
 ) -> User:
     db, conn = db_factory
     if not authorization:
@@ -45,8 +49,8 @@ async def get_user_by_access_token(
 
 
 async def get_manager(
-        user: Annotated[User, Depends(get_user_by_access_token)],
-        db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    user: Annotated[User, Depends(get_user_by_access_token)],
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
 ) -> Employee:
     if user.is_employee:
         db, conn = db_factory
@@ -60,8 +64,8 @@ async def get_manager(
 
 
 async def get_client(
-        user: Annotated[User, Depends(get_user_by_access_token)],
-        db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    user: Annotated[User, Depends(get_user_by_access_token)],
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
 ) -> Client:
     if not user.is_employee:
         db, conn = db_factory
@@ -74,8 +78,8 @@ async def get_client(
 
 
 async def get_worker(
-        user: Annotated[User, Depends(get_user_by_access_token)],
-        db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    user: Annotated[User, Depends(get_user_by_access_token)],
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
 ) -> Employee:
     if user.is_employee:
         db, conn = db_factory

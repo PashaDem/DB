@@ -2,7 +2,9 @@
 # TODO: move out business logic to repositories
 # TODO: try to move the procedures call to aiosql
 # TODO: important - catch the exception in verify_password in create_token endpoint
+
 from typing import Annotated, Tuple
+from enum import StrEnum
 
 from aiosql.queries import Queries
 from asyncpg import Connection
@@ -22,6 +24,12 @@ from .schema import (
 )
 
 user_router = APIRouter()
+
+
+class RolesEnum(StrEnum):
+    EMPLOYEE = "EMPLOYEE"
+    MANAGER = "MANAGER"
+    CLIENT = "CLIENT"
 
 
 @user_router.post("/register", response_model=UserWithoutPassword)
@@ -47,6 +55,7 @@ async def register_client(
     # check if user was created
     raw_user = await db.get_user_by_username(conn, username=user_info.username)
     raw_user = dict(raw_user.items())
+
     return dict(raw_user.items())
 
 
@@ -113,3 +122,31 @@ async def register_employee(
     raw_user = await db.get_employee_by_username(conn, username=payload.username)
     raw_user = dict(raw_user.items())
     return dict(raw_user.items())
+
+
+from pydantic import BaseModel
+
+
+class UserInfo(BaseModel):
+    user_id: int
+    role: RolesEnum
+    fullname: str
+    contact_phone: str
+    username: str
+    is_active: bool
+    is_employee: bool
+
+
+@user_router.get("/user_info", response_model=UserInfo)
+async def get_user_info(
+    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    user: Annotated[User, Depends(get_user_by_access_token)],
+):
+    db, conn = db_factory
+    raw_user_info = await db.get_user_info_by_user_id(conn, user_id=user.id)
+    user_dict = dict(raw_user_info.items())
+
+    if not user_dict.get("role", None):
+        user_dict['role'] = RolesEnum.CLIENT
+
+    return user_dict

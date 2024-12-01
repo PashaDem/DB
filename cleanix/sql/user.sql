@@ -29,6 +29,18 @@ select usr.username, usr.fullname, usr.contact_phone, emp.role, emp.experience
 from public.user as usr
 inner join public.employee as emp on usr.id = emp.id;
 
+--name: get_user_info_by_user_id^
+select u.id as user_id,
+       e.role as role,
+       u.fullname as fullname,
+       u.contact_phone as contact_phone,
+       u.username as username,
+       u.is_active as is_active,
+       u.is_employee as is_employee
+from public.user u
+left join public.employee e on u.id = e.id
+left join public.client c on c.id = u.id
+where u.id = :user_id;
 
 -- name: block_user_by_id!
 update public.user

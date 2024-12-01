@@ -11,7 +11,7 @@ class OrderInput(BaseModel):
 
 class OrderToSave(OrderInput):
     client_id: int
-    status: str = 'INQUEUE'
+    status: str = "INQUEUE"
 
 
 class Order(OrderToSave):

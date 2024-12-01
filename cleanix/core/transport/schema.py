@@ -1,7 +1,4 @@
-from decimal import Decimal
-from typing import Annotated
-
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class TransportInput(BaseModel):
