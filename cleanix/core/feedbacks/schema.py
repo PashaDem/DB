@@ -15,3 +15,6 @@ class FeedbackInit(FeedbackInput):
 
 class Feedback(FeedbackInit):
     id: int
+
+class FeedbackWithUsername(Feedback):
+    client_username: str

@@ -6,7 +6,7 @@ from typing import Annotated
 from aiosql.queries import Queries
 from asyncpg import Connection
 from core.feedbacks.exception import FeedbackDoesNotExist
-from core.feedbacks.schema import Feedback, FeedbackInit, FeedbackInput
+from core.feedbacks.schema import Feedback, FeedbackInit, FeedbackInput, FeedbackWithUsername
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from shared import queries
 from users.dependencies import get_client
@@ -79,7 +79,7 @@ async def remove_feedback(
 @feedback_router.get("/")
 async def get_feedbacks(
     db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
-) -> list[Feedback]:
+) -> list[FeedbackWithUsername]:
     db, conn = db_factory
     raw_feeds = await db.get_feedbacks(conn)
     return [dict(raw_feed.items()) for raw_feed in raw_feeds]

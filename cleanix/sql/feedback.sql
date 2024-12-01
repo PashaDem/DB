@@ -20,8 +20,9 @@ WHERE client_id = :client_id;
 
 
 -- name: get_feedbacks
-SELECT *
-FROM feedback;
+SELECT f.id, f.client_id, u.username as client_username, f.create_at, f.description, f.score
+FROM feedback f
+inner join public.user u on u.id = f.client_id;
 
 -- name: get_feedback_by_id^
 SELECT * FROM feedback WHERE id = :feedback_id;
