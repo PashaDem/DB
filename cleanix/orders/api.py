@@ -1,7 +1,6 @@
 # TODO: !!! add endpoints for update of the order state
 
-from typing import Annotated, Tuple, List
-
+from typing import Annotated
 from aiosql.queries import Queries
 from asyncpg import Connection, Record
 from fastapi import Depends, APIRouter, Response, status, HTTPException
@@ -40,7 +39,7 @@ order_router = APIRouter()
 async def create_order(
     order_data: OrderInput,
     client: Annotated[Client, Depends(get_client)],
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ):
     db, conn = db_factory
     order_to_save = OrderToSave(**(order_data.model_dump() | {"client_id": client.id}))
@@ -55,7 +54,7 @@ async def create_order(
     "/{order_id}", response_model=Order, dependencies=[Depends(check_order_read_access)]
 )
 async def get_order(
-    order_id: int, db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)]
+    order_id: int, db_factory: Annotated[tuple[Queries, Connection], Depends(queries)]
 ):
     db, conn = db_factory
     raw_order = await db.get_order_by_id(conn, order_id=order_id)
@@ -65,10 +64,10 @@ async def get_order(
 @order_router.get(
     "/user/{user_id}",
     dependencies=[Depends(check_all_client_orders_read_access)],
-    response_model=List[Order],
+    response_model=list[Order],
 )
 async def get_orders(
-    user_id: int, db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)]
+    user_id: int, db_factory: Annotated[tuple[Queries, Connection], Depends(queries)]
 ):
     db, conn = db_factory
     raw_orders = await db.get_orders_by_user_id(conn, user_id=user_id)
@@ -78,7 +77,7 @@ async def get_orders(
 @order_router.delete("/{order_id}", dependencies=[Depends(check_order_delete_access)])
 async def delete_order(
     order_id: int,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ):
     db, conn = db_factory
@@ -103,7 +102,7 @@ async def delete_order(
 async def add_service_to_order(
     order_id: int,
     services_info: ServiceIds,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ) -> None:
     db, conn = db_factory
@@ -127,7 +126,7 @@ async def add_service_to_order(
 async def remove_service_from_order(
     order_id: int,
     service_info: ServiceId,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ):
     db, conn = db_factory
@@ -151,7 +150,7 @@ async def remove_service_from_order(
 @order_router.post("/{order_id}/assign_order")
 async def assign_order(
     order_id: int,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
     employee: Annotated[Employee, Depends(check_order_assign_access)],
 ) -> None:
@@ -194,7 +193,7 @@ async def assign_order(
 )
 async def mark_order_as_in_process(
     order_id: int,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ):
     """Заказ помечается, как IN_PROCESS, когда сотрудники начинают оказывать услуги"""
     db, conn = db_factory
@@ -225,7 +224,7 @@ async def mark_order_as_in_process(
 )
 async def mark_order_as_paid(
     order_id: int,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ):
     """нельзя пометить как в процессе, потому что если заказ уже оплачен, то что-то менять в нем нельзя"""
     db, conn = db_factory
@@ -257,7 +256,7 @@ async def mark_order_as_paid(
 async def add_transport(
     order_id: int,
     transport_info: TransportId,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ):
     db, conn = db_factory
@@ -292,7 +291,7 @@ async def add_transport(
 async def remove_transport(
     order_id: int,
     transport_info: TransportId,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ):
     db, conn = db_factory
@@ -304,7 +303,7 @@ async def remove_transport(
         conn, transport_id=transport_info.transport_id
     )
     if does_transport_exist:
-        transport_ids: List[int] = [
+        transport_ids: list[int] = [
             raw_transport["transport_id"]
             for raw_transport in await db.get_all_order_transports(conn, order_id)
         ]
@@ -328,7 +327,7 @@ async def remove_transport(
 async def add_tool(
     order_id: int,
     tool_info: ToolId,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ):
     db, conn = db_factory
@@ -338,7 +337,7 @@ async def add_tool(
 
     does_tool_exist = await db.does_tool_exist(conn, tool_id=tool_info.tool_id)
     if does_tool_exist:
-        tool_ids: List[int] = [
+        tool_ids: list[int] = [
             raw_tool["tool_id"]
             for raw_tool in await db.get_all_order_tools(conn, order_id)
         ]
@@ -359,7 +358,7 @@ async def add_tool(
 async def remove_tool(
     order_id: int,
     tool_info: ToolId,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ):
     db, conn = db_factory
