@@ -70,6 +70,11 @@ async def get_client(
     if not user.is_employee:
         db, conn = db_factory
         raw_client = await db.get_client_by_user_id(conn, user_id=user.id)
+        if not raw_client:
+            raise HTTPException(
+                detail="Удалить свой отзыв может только клиент сервиса",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
         client_dict = dict(raw_client.items())
         client_dict.update(user.model_dump())
         client: Client = Client(**client_dict)
