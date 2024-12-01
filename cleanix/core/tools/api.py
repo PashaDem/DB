@@ -1,5 +1,4 @@
-from typing import Annotated, List, Tuple
-
+from typing import Annotated
 from aiosql.queries import Queries
 from asyncpg import Connection
 from fastapi import APIRouter, Depends, HTTPException, Response, status
@@ -15,7 +14,7 @@ tool_router = APIRouter()
 @tool_router.post("/", dependencies=[Depends(get_manager)])
 async def create_tool(
     payload: ToolInput,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ) -> Tool:
     db, conn = db_factory
     if await db.get_tool_by_name(conn, tool_name=payload.name):
@@ -32,7 +31,7 @@ async def create_tool(
 async def modify_tool(
     tool_id: int,
     payload: ToolInput,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ) -> Tool:
     db, conn = db_factory
@@ -58,7 +57,7 @@ async def modify_tool(
 @tool_router.post("/{tool_id}", dependencies=[Depends(get_manager)])
 async def deregister_tool(
     tool_id: int,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ) -> None:
     db, conn = db_factory
@@ -72,8 +71,8 @@ async def deregister_tool(
 
 @tool_router.get("/")
 async def get_tools(
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
-) -> List[Tool]:
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
+) -> list[Tool]:
     db, conn = db_factory
     raw_tools = await db.get_tools(conn)
     return [dict(raw_tool.items()) for raw_tool in raw_tools]
@@ -82,7 +81,7 @@ async def get_tools(
 @tool_router.get("/{tool_id}")
 async def get_tool(
     tool_id: int,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ) -> Tool:
     db, conn = db_factory
     raw_tool = await db.get_tool_by_id(conn, tool_id=tool_id)

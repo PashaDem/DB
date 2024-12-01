@@ -1,5 +1,4 @@
-from typing import Annotated, List, Tuple
-
+from typing import Annotated
 from aiosql.queries import Queries
 from asyncpg import Connection
 from fastapi import APIRouter, Depends, HTTPException, Response, status
@@ -15,7 +14,7 @@ transport_router = APIRouter()
 @transport_router.post("/", dependencies=[Depends(get_manager)])
 async def create_transport(
     payload: TransportInput,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ) -> Transport:
     db, conn = db_factory
     if await db.get_transport_by_name(conn, transport_name=payload.name):
@@ -32,7 +31,7 @@ async def create_transport(
 async def modify_transport(
     transport_id: int,
     payload: TransportInput,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ) -> Transport:
     db, conn = db_factory
     raw_transport = await db.get_transport_by_id(conn, transport_id=transport_id)
@@ -59,7 +58,7 @@ async def modify_transport(
 @transport_router.post("/{transport_id}", dependencies=[Depends(get_manager)])
 async def deregister_transport(
     transport_id: int,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ) -> None:
     db, conn = db_factory
@@ -73,8 +72,8 @@ async def deregister_transport(
 
 @transport_router.get("/")
 async def get_transports(
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
-) -> List[Transport]:
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
+) -> list[Transport]:
     db, conn = db_factory
     raw_transports = await db.get_transports(conn)
     return [dict(raw_transport.items()) for raw_transport in raw_transports]
@@ -83,7 +82,7 @@ async def get_transports(
 @transport_router.get("/{transport_id}")
 async def get_transport(
     transport_id: int,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ) -> Transport:
     db, conn = db_factory
     raw_transport = await db.get_transport_by_id(conn, transport_id=transport_id)

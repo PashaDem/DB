@@ -1,7 +1,7 @@
 # TODO: rename For... models into Init -> FeedbackInit
 # TODO: change update pydantic models: make fields optional
 from datetime import date
-from typing import Annotated, List, Tuple
+from typing import Annotated
 
 from aiosql.queries import Queries
 from asyncpg import Connection
@@ -19,7 +19,7 @@ feedback_router = APIRouter()
 async def create_feedback(
     payload: FeedbackInput,
     client: Annotated[Client, Depends(get_client)],
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ) -> Feedback:
     db, conn = db_factory
@@ -46,7 +46,7 @@ async def create_feedback(
 async def modify_feedback(
     payload: FeedbackInput,
     client: Annotated[Client, Depends(get_client)],
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ) -> Feedback:
     db, conn = db_factory
@@ -63,7 +63,7 @@ async def modify_feedback(
 @feedback_router.delete("/")
 async def remove_feedback(
     client: Annotated[Client, Depends(get_client)],
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ) -> None:
     db, conn = db_factory
@@ -78,8 +78,8 @@ async def remove_feedback(
 
 @feedback_router.get("/")
 async def get_feedbacks(
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
-) -> List[Feedback]:
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
+) -> list[Feedback]:
     db, conn = db_factory
     raw_feeds = await db.get_feedbacks(conn)
     return [dict(raw_feed.items()) for raw_feed in raw_feeds]
@@ -88,7 +88,7 @@ async def get_feedbacks(
 @feedback_router.get("/{feedback_id}")
 async def get_feedback(
     feedback_id: int,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ) -> Feedback:
     db, conn = db_factory
     raw_feedback = await db.get_feedback_by_id(conn, feedback_id=feedback_id)

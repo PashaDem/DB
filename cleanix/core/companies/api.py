@@ -1,4 +1,4 @@
-from typing import Annotated, List, Tuple
+from typing import Annotated
 
 from aiosql.queries import Queries
 from asyncpg import Connection, Record
@@ -17,13 +17,12 @@ company_router = APIRouter()
 async def create_company(
     payload: CompanyForRegistrationOrUpdate,
     client: Annotated[Client, Depends(get_client)],
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ):
     db, conn = db_factory
     company_rec = await db.does_company_exist_for_user_by_id(conn, user_id=client.id)
     company_id = dict(company_rec.items())["company_id"]
-    print(company_id)
     if not company_id:
         await db.create_company(conn, user_id=client.id, **payload.model_dump())
         raw_company: Record = await db.get_company_by_user_id(conn, user_id=client.id)
@@ -39,7 +38,7 @@ async def create_company(
 @company_router.get("/{company_id}")
 async def get_company(
     company_id: int,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ):
     db, conn = db_factory
     raw_company: Record = await db.get_company_by_id(conn, company_id=company_id)
@@ -50,8 +49,8 @@ async def get_company(
 
 @company_router.get("/")
 async def get_companies(
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)]
-) -> List[Company]:
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)]
+) -> list[Company]:
     db, conn = db_factory
     raw_company_list = await db.get_companies(conn)
     companies = [dict(raw_company.items()) for raw_company in raw_company_list]
@@ -60,8 +59,8 @@ async def get_companies(
 
 @company_router.get("/partners/")
 async def get_partner_companies(
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)]
-) -> List[Company]:
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)]
+    ) -> list[Company]:
     db, conn = db_factory
     raw_company_list = await db.get_partner_companies(conn)
     companies = [dict(raw_company.items()) for raw_company in raw_company_list]
@@ -72,7 +71,7 @@ async def get_partner_companies(
 async def modify_company(
     company_id: int,
     payload: CompanyForRegistrationOrUpdate,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     client: Annotated[Client, Depends(get_client)],
 ):
     db, conn = db_factory
@@ -98,7 +97,7 @@ async def modify_company(
 @company_router.post("/unbind_company")
 async def unbind_company(
     client: Annotated[Client, Depends(get_client)],
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ):
     db, conn = db_factory

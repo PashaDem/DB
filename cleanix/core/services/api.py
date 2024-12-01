@@ -1,6 +1,6 @@
 # TODO: rename For... models into Init -> FeedbackInit
 # TODO: change update pydantic models: make fields optional
-from typing import Annotated, List, Tuple
+from typing import Annotated
 
 from aiosql.queries import Queries
 from asyncpg import Connection
@@ -16,7 +16,7 @@ service_router = APIRouter()
 @service_router.post("/", dependencies=[Depends(get_manager)])
 async def create_service(
     payload: ServiceInput,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ) -> Service:
     db, conn = db_factory
     if await db.get_service_by_name(conn, service_name=payload.name):
@@ -33,7 +33,7 @@ async def create_service(
 async def modify_service(
     service_id: int,
     payload: ServiceInput,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ) -> Service:
     db, conn = db_factory
     raw_service = await db.get_service_by_id(conn, service_id=service_id)
@@ -58,7 +58,7 @@ async def modify_service(
 @service_router.post("/{service_id}", dependencies=[Depends(get_manager)])
 async def archive_service(
     service_id: int,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ) -> None:
     db, conn = db_factory
@@ -68,8 +68,8 @@ async def archive_service(
 
 @service_router.get("/")
 async def get_services(
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
-) -> List[Service]:
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
+) -> list[Service]:
     db, conn = db_factory
     raw_services = await db.get_services(conn)
     return [dict(raw_service.items()) for raw_service in raw_services]
@@ -78,7 +78,7 @@ async def get_services(
 @service_router.get("/{service_id}")
 async def get_service(
     service_id: int,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ) -> Service:
     db, conn = db_factory
     raw_service = await db.get_service_by_id(conn, service_id=service_id)

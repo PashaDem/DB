@@ -3,7 +3,7 @@
 # TODO: try to move the procedures call to aiosql
 # TODO: important - catch the exception in verify_password in create_token endpoint
 
-from typing import Annotated, Tuple
+from typing import Annotated
 from enum import StrEnum
 
 from aiosql.queries import Queries
@@ -29,7 +29,7 @@ user_router = APIRouter()
 @user_router.post("/register", response_model=UserWithoutPassword)
 async def register_client(
     user_info: UserForRegistration,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ):
     db, conn = db_factory
     raw_user = await db.get_user_by_username(conn, username=user_info.username)
@@ -57,7 +57,7 @@ async def register_client(
 async def change_password(
     payload: PasswordChange,
     user: Annotated[User, Depends(get_user_by_access_token)],
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ):
     db, conn = db_factory
@@ -75,7 +75,7 @@ async def change_password(
 async def block_user(
     user_id: int,
     manager: Annotated[Employee, Depends(get_manager)],
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     response: Response,
 ):
     db, conn = db_factory
@@ -93,7 +93,7 @@ async def block_user(
 @user_router.post("/register_employee", dependencies=[Depends(get_manager)])
 async def register_employee(
     payload: EmployeeForRegistration,
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ):
     db, conn = db_factory
     raw_user = await db.get_user_by_username(conn, username=payload.username)
@@ -120,7 +120,7 @@ async def register_employee(
 
 @user_router.get("/user_info", response_model=UserInfo)
 async def get_user_info(
-    db_factory: Annotated[Tuple[Queries, Connection], Depends(queries)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     user: Annotated[User, Depends(get_user_by_access_token)],
 ):
     db, conn = db_factory
