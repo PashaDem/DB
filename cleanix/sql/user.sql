@@ -30,7 +30,7 @@ from public.user as usr
 inner join public.employee as emp on usr.id = emp.id;
 
 --name: get_user_info_by_user_id^
-select u.id as user_id,
+select u.id as id,
        e.role as role,
        u.fullname as fullname,
        u.contact_phone as contact_phone,

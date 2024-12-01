@@ -20,16 +20,10 @@ from .schema import (
     PasswordChange,
     User,
     UserForRegistration,
-    UserWithoutPassword,
+    UserWithoutPassword, RolesEnum, UserInfo,
 )
 
 user_router = APIRouter()
-
-
-class RolesEnum(StrEnum):
-    EMPLOYEE = "EMPLOYEE"
-    MANAGER = "MANAGER"
-    CLIENT = "CLIENT"
 
 
 @user_router.post("/register", response_model=UserWithoutPassword)
@@ -122,19 +116,6 @@ async def register_employee(
     raw_user = await db.get_employee_by_username(conn, username=payload.username)
     raw_user = dict(raw_user.items())
     return dict(raw_user.items())
-
-
-from pydantic import BaseModel
-
-
-class UserInfo(BaseModel):
-    user_id: int
-    role: RolesEnum
-    fullname: str
-    contact_phone: str
-    username: str
-    is_active: bool
-    is_employee: bool
 
 
 @user_router.get("/user_info", response_model=UserInfo)

@@ -1,4 +1,5 @@
 from decimal import Decimal
+from enum import StrEnum
 from typing import Annotated, Literal, Optional
 
 from pydantic import BaseModel, Field
@@ -44,3 +45,18 @@ class Client(User):
 class PasswordChange(BaseModel):
     old_password: str
     new_password: str
+
+
+class RolesEnum(StrEnum):
+    EMPLOYEE = "EMPLOYEE"
+    MANAGER = "MANAGER"
+    CLIENT = "CLIENT"
+
+class UserInfo(BaseModel):
+    id: int
+    role: RolesEnum
+    fullname: str
+    contact_phone: str
+    username: str
+    is_active: bool
+    is_employee: bool
