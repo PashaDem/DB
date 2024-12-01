@@ -28,7 +28,7 @@ WHERE id = :transport_id;
 
 -- name: get_transports
 SELECT *
-FROM transport;
+FROM transport where is_deregistered = false;
 
 -- name: does_transport_exist^
 SELECT *

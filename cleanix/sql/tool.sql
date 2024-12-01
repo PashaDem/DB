@@ -27,7 +27,7 @@ WHERE id = :tool_id;
 
 -- name: get_tools
 SELECT *
-FROM tool;
+FROM tool where is_deregistered = false;
 
 -- name: does_tool_exist^
 select *
