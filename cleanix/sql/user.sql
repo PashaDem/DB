@@ -25,7 +25,7 @@ from public.client
 where id = :user_id;
 
 -- name: get_employee_by_username^
-select usr.username, usr.fullname, usr.contact_phone, emp.role, emp.experience
+select usr.id, usr.username, usr.fullname, usr.contact_phone, emp.role, emp.experience
 from public.user as usr
 inner join public.employee as emp on usr.id = emp.id;
 

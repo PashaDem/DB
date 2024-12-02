@@ -3,7 +3,7 @@
 # TODO: try to move the procedures call to aiosql
 # TODO: important - catch the exception in verify_password in create_token endpoint
 
-from typing import Annotated
+from typing import Annotated, Literal
 from enum import StrEnum
 
 from aiosql.queries import Queries
@@ -90,7 +90,18 @@ async def block_user(
     return {"detail": "There are no user with such id."}
 
 
-@user_router.post("/register_employee", dependencies=[Depends(get_manager)])
+from pydantic import BaseModel
+
+class CreatedEmployee(BaseModel):
+    id: int
+    username: str
+    fullname: str
+    contact_phone: str
+    role: Literal['MANAGER', 'EMPLOYEE']
+    experience: float
+
+
+@user_router.post("/register_employee", dependencies=[Depends(get_manager)], response_model=CreatedEmployee)
 async def register_employee(
     payload: EmployeeForRegistration,
     db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
