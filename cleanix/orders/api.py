@@ -51,17 +51,6 @@ async def create_order(
 
 
 @order_router.get(
-    "/{order_id}", response_model=Order, dependencies=[Depends(check_order_read_access)]
-)
-async def get_order(
-    order_id: int, db_factory: Annotated[tuple[Queries, Connection], Depends(queries)]
-):
-    db, conn = db_factory
-    raw_order = await db.get_order_by_id(conn, order_id=order_id)
-    return dict(raw_order.items())
-
-
-@order_router.get(
     "/client_orders",
     dependencies=[Depends(check_all_client_orders_read_access)],
     response_model=list[Order],
@@ -85,6 +74,17 @@ async def get_employee_orders(
     db, conn = db_factory
     orders = await db.get_employee_orders(conn, worker.id)
     return [dict(raw_order.items()) for raw_order in orders]
+
+
+@order_router.get(
+    "/{order_id}", response_model=Order, dependencies=[Depends(check_order_read_access)]
+)
+async def get_order(
+    order_id: int, db_factory: Annotated[tuple[Queries, Connection], Depends(queries)]
+):
+    db, conn = db_factory
+    raw_order = await db.get_order_by_id(conn, order_id=order_id)
+    return dict(raw_order.items())
 
 
 @order_router.delete("/{order_id}", dependencies=[Depends(check_order_delete_access)])

@@ -81,4 +81,4 @@ left outer join order_to_employee ote on cr.id = ote.order_id)
 union
 (select* from cleaning_order cr
 inner join order_to_employee ote on ote.order_id = cr.id
-where ote.employee_id = :employee_id and cr.status <> 'PAID')
+where ote.employee_id = :employee_id and cr.status <> 'PAID');
