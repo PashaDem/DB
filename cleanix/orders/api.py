@@ -8,7 +8,7 @@ from fastapi import Depends, APIRouter, Response, status, HTTPException
 from core.tools.exception import ToolDoesNotExist
 from core.transport.exception import TransportDoesNotExist
 from shared import queries
-from users.dependencies import get_client, get_manager
+from users.dependencies import get_client, get_manager, get_worker
 from users.schema import Client, Employee
 from .dependencies import (
     check_order_read_access,
@@ -62,16 +62,29 @@ async def get_order(
 
 
 @order_router.get(
-    "/user/{user_id}",
+    "/client_orders",
     dependencies=[Depends(check_all_client_orders_read_access)],
     response_model=list[Order],
 )
-async def get_orders(
-    user_id: int, db_factory: Annotated[tuple[Queries, Connection], Depends(queries)]
+async def get_client_orders(
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
+    client: Annotated[Client, Depends(get_client)],
 ):
     db, conn = db_factory
-    raw_orders = await db.get_orders_by_user_id(conn, user_id=user_id)
+    raw_orders = await db.get_orders_by_user_id(conn, user_id=client.id)
     return [dict(raw_order.items()) for raw_order in raw_orders]
+
+@order_router.get(
+    "/employee_orders",
+    response_model=list[Order],
+)
+async def get_employee_orders(
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
+    worker: Annotated[Employee, Depends(get_worker)],
+):
+    db, conn = db_factory
+    orders = await db.get_employee_orders(conn, worker.id)
+    return [dict(raw_order.items()) for raw_order in orders]
 
 
 @order_router.delete("/{order_id}", dependencies=[Depends(check_order_delete_access)])
@@ -108,7 +121,7 @@ async def add_service_to_order(
     db, conn = db_factory
     raw_order = await db.get_order_by_id(conn, order_id=order_id)
     order_dict = dict(raw_order.items())
-    if order_dict["status"] != "PAID":
+    if order_dict["status"] == "INQUEUE":
         await db.append_services_to_order(
             conn, services=services_info.services, order_id=order_id
         )
@@ -132,7 +145,7 @@ async def remove_service_from_order(
     db, conn = db_factory
     raw_order = await db.get_order_by_id(conn, order_id=order_id)
     order_dict = dict(raw_order.items())
-    if order_dict["status"] != "PAID":
+    if order_dict["status"] == "INQUEUE":
         await db.remove_service_from_order(
             conn, service_id=service_info.service_id, order_id=order_id
         )
@@ -162,10 +175,10 @@ async def assign_order(
     if order_dict["status"] == "INQUEUE":
         # сотрудник может принять заказ, только если тот не выполняется еще или не оплачен
         # ( оплата подразумевается после выполнения заказа )
-        raw_employee_id_list: List[Record] = await db.get_order_employees_by_order_id(
+        raw_employee_id_list: list[Record] = await db.get_order_employees_by_order_id(
             conn, order_id=order_id
         )
-        employee_id_list: List[int] = [
+        employee_id_list: list[int] = [
             raw_id["employee_id"] for raw_id in raw_employee_id_list
         ]
         if employee.id not in employee_id_list:
@@ -268,7 +281,7 @@ async def add_transport(
         conn, transport_id=transport_info.transport_id
     )
     if does_transport_exist:
-        transport_ids: List[int] = [
+        transport_ids: list[int] = [
             raw_transport["transport_id"]
             for raw_transport in await db.get_all_order_transports(
                 conn, order_id=order_id
@@ -368,7 +381,7 @@ async def remove_tool(
 
     does_tool_exist = await db.does_tool_exist(conn, tool_id=tool_info.tool_id)
     if does_tool_exist:
-        tool_ids: List[int] = [
+        tool_ids: list[int] = [
             raw_tool["tool_id"]
             for raw_tool in await db.get_all_order_tools(conn, order_id)
         ]

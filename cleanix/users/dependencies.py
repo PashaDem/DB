@@ -55,6 +55,11 @@ async def get_manager(
     if user.is_employee:
         db, conn = db_factory
         raw_employee = await db.get_employee_by_user_id(conn, user_id=user.id)
+        if not raw_employee:
+            raise HTTPException(
+                detail="Ручка только для администраторов сервиса",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
         employee = dict(raw_employee.items())
         employee.update(**user.model_dump())
         employee = Employee(**employee)
@@ -73,7 +78,7 @@ async def get_client(
         if not raw_client:
             raise HTTPException(
                 detail="Удалить свой отзыв может только клиент сервиса",
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_403_FORBIDDEN,
             )
         client_dict = dict(raw_client.items())
         client_dict.update(user.model_dump())
@@ -89,6 +94,11 @@ async def get_worker(
     if user.is_employee:
         db, conn = db_factory
         raw_employee = await db.get_employee_by_user_id(conn, user_id=user.id)
+        if not raw_employee:
+            raise HTTPException(
+                detail="Ручка только для сотрудников сервиса",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
         employee = dict(raw_employee.items())
         employee.update(**user.model_dump())
         employee = Employee(**employee)

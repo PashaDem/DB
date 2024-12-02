@@ -74,3 +74,11 @@ delete
 from order_to_tool
 where order_id = :order_id
   and tool_id = :tool_id;
+
+-- name: get_employee_orders
+(select * from cleaning_order cr
+left outer join order_to_employee ote on cr.id = ote.order_id)
+union
+(select* from cleaning_order cr
+inner join order_to_employee ote on ote.order_id = cr.id
+where ote.employee_id = :employee_id and cr.status <> 'PAID')
