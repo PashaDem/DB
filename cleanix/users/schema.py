@@ -37,6 +37,10 @@ class Employee(EmployeeForRegistration, User):
     experience: Annotated[Decimal, Field(decimal_places=2)]
 
 
+class EmployeeForManager(UserWithoutPassword):
+    role: Literal["EMPLOYEE", "MANAGER"]
+    experience: Annotated[Decimal, Field(decimal_places=2)]
+
 class Client(User):
     company_id: Optional[int]
     statistics_id: int

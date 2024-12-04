@@ -11,6 +11,7 @@ from asyncpg import Connection
 from auth.utils import get_password_hash, verify_password
 from fastapi import APIRouter, Depends, Response, status
 from shared import queries
+from fastapi import Request
 
 from .dependencies import get_manager, get_user_by_access_token
 from .exception import UsernameIsNotAvailable
@@ -20,7 +21,7 @@ from .schema import (
     PasswordChange,
     User,
     UserForRegistration,
-    UserWithoutPassword, RolesEnum, UserInfo,
+    UserWithoutPassword, RolesEnum, UserInfo, EmployeeForManager,
 )
 
 user_router = APIRouter()
@@ -145,3 +146,16 @@ async def get_user_info(
         user_dict['left_feedback'] = False
 
     return user_dict
+
+@user_router.get("/employees", response_model=list[EmployeeForManager])
+async def get_employees(
+    request: Request,
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
+    employee: Annotated[Employee, Depends(get_manager)],
+):
+    db, conn = db_factory
+    employees_info = await db.get_employees(conn, current_user_id=employee.id)
+    emp_dicts = [dict(emp.items()) for emp in employees_info]
+    # удаляем пароли
+    [emp_dct.pop("password") for emp_dct in emp_dicts]
+    return emp_dicts

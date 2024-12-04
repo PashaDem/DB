@@ -48,3 +48,8 @@ where u.id = :user_id;
 update public.user
 set is_active = FALSE
 where id = :user_id;
+
+
+-- name: get_employees
+select * from public.user u
+inner join public.employee e on u.id = e.id where u.id != :current_user_id;
