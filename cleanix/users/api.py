@@ -2,7 +2,7 @@
 # TODO: move out business logic to repositories
 # TODO: try to move the procedures call to aiosql
 # TODO: important - catch the exception in verify_password in create_token endpoint
-
+from fastapi import HTTPException
 from typing import Annotated, Literal
 from enum import StrEnum
 
@@ -72,7 +72,7 @@ async def change_password(
         return {"detail": "Invalid old password was provided."}
 
 
-@user_router.post("/block/{user_id}")
+@user_router.post("/{user_id}/block")
 async def block_user(
     user_id: int,
     manager: Annotated[Employee, Depends(get_manager)],
@@ -83,6 +83,12 @@ async def block_user(
     raw_user = await db.get_user_by_id(conn, user_id=user_id)
     if raw_user:
         user = User(**dict(raw_user.items()))
+        if not user.is_active:
+            raise HTTPException(
+                detail="Пользователь уже заблокирован",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
         if user.id != manager.id:
             await db.block_user_by_id(conn, user.id)
             response.status_code = status.HTTP_204_NO_CONTENT

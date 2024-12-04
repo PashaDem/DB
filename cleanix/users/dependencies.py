@@ -3,7 +3,7 @@ from typing import Annotated, Tuple
 
 from aiosql.queries import Queries
 from asyncpg import Connection, Record
-from auth.exception import BadToken
+from auth.exception import BadToken, BlockedUserError
 from config import auth_config
 from fastapi import Depends, Header, HTTPException
 from jose import JWTError, jwt
@@ -45,6 +45,11 @@ async def get_user_by_access_token(
     raw_user: Record = await db.get_user_by_id(conn, user_id)
     if not raw_user:
         raise BadToken
+
+    user = dict(raw_user.items())
+    if not user['is_active']:
+        raise BlockedUserError
+
     return User.model_validate(dict(raw_user.items()))
 
 
