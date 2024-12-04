@@ -25,7 +25,7 @@ from .schema import (
     ServiceIds,
     ServiceId,
     TransportId,
-    ToolId,
+    ToolId, OrderWithServices,
 )
 from .exception import OrderDoesNotExist
 
@@ -35,19 +35,28 @@ order_router = APIRouter()
 #  -----------------------------crud----------------------------------------------------------------
 
 
-@order_router.post("/", response_model=Order)
+@order_router.post("/", response_model=OrderWithServices)
 async def create_order(
     order_data: OrderInput,
     client: Annotated[Client, Depends(get_client)],
     db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
 ):
     db, conn = db_factory
-    order_to_save = OrderToSave(**(order_data.model_dump() | {"client_id": client.id}))
+    full_payload = order_data.model_dump()
+    # получаем услуги
+    service_ids = full_payload.pop('services')
+    order_to_save = OrderToSave(**(full_payload | {"client_id": client.id}))
     raw_id = await db.insert_full_order(conn, **order_to_save.model_dump())
     await db.increment_order_count(conn, statistics_id=client.statistics_id)
     order_id = dict(raw_id.items())["insert_full_order"]
-    raw_order = await db.get_order_by_id(conn, order_id=order_id)
-    return dict(raw_order.items())
+    [await db.insert_order_service(conn, service_id=service_id, order_id=order_id) for service_id in service_ids]
+
+    services = [dict(raw_obj.items()) for raw_obj in await db.get_services_for_order(conn, order_id)]
+    raw_order = await db.get_order_by_id(conn, order_id)
+
+    raw_order = dict(raw_order.items())
+    raw_order['services'] = services
+    return raw_order
 
 
 @order_router.get(

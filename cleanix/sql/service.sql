@@ -1,3 +1,9 @@
+-- name: get_services_for_order
+select * from service where id in (
+    select service_id from order_to_service where order_id=:order_id
+);
+
+
 -- name: get_service_by_id^
 SELECT *
 FROM service

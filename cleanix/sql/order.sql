@@ -82,3 +82,9 @@ union
 (select* from cleaning_order cr
 inner join order_to_employee ote on ote.order_id = cr.id
 where ote.employee_id = :employee_id and cr.status <> 'PAID');
+
+
+-- name: insert_order_service!
+insert into order_to_service (service_id, order_id) values (
+    :service_id, :order_id
+);

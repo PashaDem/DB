@@ -3,15 +3,21 @@ from typing import List
 from pydantic import BaseModel
 from datetime import date
 
+from core.services.schema import Service
+
 
 class OrderInput(BaseModel):
     address: str
     clean_date: date
+    services: list[int]
 
 
-class OrderToSave(OrderInput):
+class OrderToSave(BaseModel):
     client_id: int
+    address: str
+    clean_date: date
     status: str = "INQUEUE"
+
 
 
 class Order(OrderToSave):
@@ -19,8 +25,12 @@ class Order(OrderToSave):
     contract_id: int
 
 
+class OrderWithServices(Order):
+    services: list[Service]
+
+
 class ServiceIds(BaseModel):
-    services: List[int]
+    services: list[int]
 
 
 class ServiceId(BaseModel):
