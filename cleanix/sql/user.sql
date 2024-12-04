@@ -49,6 +49,11 @@ update public.user
 set is_active = FALSE
 where id = :user_id;
 
+-- name: unblock_user_by_id!
+update public.user
+set is_active = TRUE
+where id = :user_id;
+
 
 -- name: get_employees
 select * from public.user u

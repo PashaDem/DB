@@ -94,7 +94,36 @@ async def block_user(
             response.status_code = status.HTTP_204_NO_CONTENT
             return
     response.status_code = status.HTTP_400_BAD_REQUEST
-    return {"detail": "There are no user with such id."}
+    return {"detail": "Пользователя с данным id не существует"}
+
+
+@user_router.post("/{user_id}/unblock")
+async def unblock_user(
+    user_id: int,
+    manager: Annotated[Employee, Depends(get_manager)],
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
+    response: Response,
+):
+    db, conn = db_factory
+
+    raw_user = await db.get_user_by_id(conn, user_id=user_id)
+    if raw_user:
+        user = User(**dict(raw_user.items()))
+        if user.is_active:
+            raise HTTPException(
+                detail="Пользователь не заблокирован",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if user.id != manager.id:
+            await db.unblock_user_by_id(conn, user.id)
+            response.status_code = status.HTTP_204_NO_CONTENT
+            return
+
+    response.status_code = status.HTTP_400_BAD_REQUEST
+    return {"detail": "Пользователя с данным id не существует"}
+
+
 
 
 from pydantic import BaseModel
