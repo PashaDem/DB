@@ -24,6 +24,7 @@ class Order(OrderToSave):
     id: int
     contract_id: int
     username: str
+    services: list[Service]
 
 
 class OrderWithServices(Order):

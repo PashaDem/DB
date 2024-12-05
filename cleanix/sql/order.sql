@@ -8,9 +8,14 @@ from cleaning_order
 where id = :order_id;
 
 -- name: get_orders_by_user_id
-select *
-from cleaning_order
-where client_id = :user_id;
+select cr.id, cr.status, cr.address, cr.clean_date, cr.contract_id, cr.client_id, array_agg(s.id) services, u.username from cleaning_order cr
+inner join order_to_service ote on ote.order_id = cr.id
+inner join service s on s.id = ote.service_id
+inner join public.user u on u.id = cr.client_id
+where cr.client_id = :user_id
+group by cr.id, u.username;
+
+delete from public.order_to_service where order_id = 9 and service_id = 1;
 
 -- name: delete_order_by_id!
 DELETE

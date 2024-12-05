@@ -3,6 +3,8 @@ select * from service where id in (
     select service_id from order_to_service where order_id=:order_id
 );
 
+-- name: get_services_by_ids
+select * from service s where s.id in :service_ids;
 
 -- name: get_service_by_id^
 SELECT *
