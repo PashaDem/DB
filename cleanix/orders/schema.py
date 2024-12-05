@@ -23,6 +23,7 @@ class OrderToSave(BaseModel):
 class Order(OrderToSave):
     id: int
     contract_id: int
+    username: str
 
 
 class OrderWithServices(Order):

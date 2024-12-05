@@ -95,7 +95,6 @@ async def get_employee_assigned_orders(
     return [dict(raw_order.items()) for raw_order in orders]
 
 
-
 @order_router.get(
     "/{order_id}", response_model=Order, dependencies=[Depends(check_order_read_access)]
 )
