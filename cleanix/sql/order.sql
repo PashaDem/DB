@@ -83,6 +83,18 @@ union
 inner join order_to_employee ote on ote.order_id = cr.id
 where ote.employee_id = :employee_id and cr.status <> 'PAID');
 
+-- name: get_employee_assigned_orders
+select * from cleaning_order cr
+where cr.id in (
+    select ote.order_id from order_to_employee ote
+    where ote.employee_id = :employee_id
+);
+
+-- name: get_employee_available_orders
+select * from cleaning_order cr
+where cr.id not in (
+    select ote.order_id from order_to_employee ote
+);
 
 -- name: insert_order_service!
 insert into order_to_service (service_id, order_id) values (

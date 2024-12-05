@@ -71,16 +71,29 @@ async def get_client_orders(
     return [dict(raw_order.items()) for raw_order in raw_orders]
 
 @order_router.get(
-    "/employee_orders",
+    "/employee_available_orders",
     response_model=list[Order],
 )
-async def get_employee_orders(
+async def get_employee_available_orders(
     db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
     worker: Annotated[Employee, Depends(get_worker)],
 ):
     db, conn = db_factory
-    orders = await db.get_employee_orders(conn, worker.id)
+    orders = await db.get_employee_available_orders(conn)
     return [dict(raw_order.items()) for raw_order in orders]
+
+@order_router.get(
+    "/employee_assigned_orders",
+    response_model=list[Order],
+)
+async def get_employee_assigned_orders(
+    db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
+    worker: Annotated[Employee, Depends(get_worker)],
+):
+    db, conn = db_factory
+    orders = await db.get_employee_assigned_orders(conn, worker.id)
+    return [dict(raw_order.items()) for raw_order in orders]
+
 
 
 @order_router.get(
