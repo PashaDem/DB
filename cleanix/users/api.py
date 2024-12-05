@@ -182,6 +182,7 @@ async def get_user_info(
 
     return user_dict
 
+
 @user_router.get("/employees", response_model=list[EmployeeForManager])
 async def get_employees(
     request: Request,

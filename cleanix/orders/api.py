@@ -12,7 +12,6 @@ from users.dependencies import get_client, get_manager, get_worker
 from users.schema import Client, Employee
 from .dependencies import (
     check_order_read_access,
-    check_all_client_orders_read_access,
     check_order_delete_access,
     check_order_modify_access,
     check_order_assign_access,
@@ -61,7 +60,6 @@ async def create_order(
 
 @order_router.get(
     "/client_orders",
-    dependencies=[Depends(check_all_client_orders_read_access)],
     response_model=list[Order],
 )
 async def get_client_orders(

@@ -56,6 +56,11 @@ class RolesEnum(StrEnum):
     MANAGER = "MANAGER"
     CLIENT = "CLIENT"
 
+class ClientStatistics(BaseModel):
+    orders_count: int
+    total_price: float
+    left_feedback: bool
+
 class UserInfo(BaseModel):
     id: int
     role: RolesEnum
@@ -65,3 +70,4 @@ class UserInfo(BaseModel):
     is_active: bool
     is_employee: bool
     left_feedback: bool
+    statistics: ClientStatistics | None = None

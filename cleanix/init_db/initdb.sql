@@ -42,8 +42,8 @@ CREATE TABLE IF NOT EXISTS public.employee
 CREATE TABLE IF NOT EXISTS public.client
 (
     id            serial NOT NULL REFERENCES public.user (id) ON DELETE CASCADE,
-    company_id    bigint REFERENCES public.company (id),
-    statistics_id bigint NOT NULL REFERENCES public.statistics (id),
+    company_id    bigint REFERENCES public.company (id) UNIQUE,
+    statistics_id bigint NOT NULL REFERENCES public.statistics (id) UNIQUE,
     PRIMARY KEY (id)
 );
 

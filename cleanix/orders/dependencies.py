@@ -23,13 +23,6 @@ async def check_order_read_access(
     raise PermissionOwnerError
 
 
-async def check_all_client_orders_read_access(
-    user_id: int, user: Annotated[User, Depends(get_user_by_access_token)]
-) -> None:
-    if not (user_id == user.id or user.is_employee):
-        raise PermissionOwnerError
-
-
 async def check_order_delete_access(
     order_id: int,
     user: Annotated[User, Depends(get_user_by_access_token)],
