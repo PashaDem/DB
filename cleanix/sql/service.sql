@@ -4,7 +4,7 @@ select * from service where id in (
 );
 
 -- name: get_services_by_ids
-select * from service s where s.id in :service_ids;
+select * from service s where s.id = any(:service_ids::int[]);
 
 -- name: get_service_by_id^
 SELECT *

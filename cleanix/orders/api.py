@@ -75,12 +75,7 @@ async def get_client_orders(
     for order_dct in order_dcts:
         service_ids.extend(order_dct['services'])
 
-    service_objs = await conn.fetch(
-        """
-        select * from service s where s.id = any($1::int[]);
-        """,
-        list(set(service_ids))
-    )
+    service_objs = await db.get_services_by_ids(conn, list(set(service_ids)))
     service_objs = [dict(obj.items()) for obj in service_objs]
 
     service_objs_map = {}

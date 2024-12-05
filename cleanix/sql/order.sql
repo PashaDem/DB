@@ -15,8 +15,6 @@ inner join public.user u on u.id = cr.client_id
 where cr.client_id = :user_id
 group by cr.id, u.username;
 
-delete from public.order_to_service where order_id = 9 and service_id = 1;
-
 -- name: delete_order_by_id!
 DELETE
 FROM cleaning_order
