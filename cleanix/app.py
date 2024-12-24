@@ -18,7 +18,9 @@ from fastapi.middleware.cors import CORSMiddleware
 @asynccontextmanager
 async def app_lifespan(app: FastAPI) -> AsyncGenerator:
     app_config = AppConfig()
-    app.db = await asyncpg.connect(
+    app.db = await asyncpg.create_pool(
+        min_size=10,
+        max_size=100,
         host=app_config.postgres_host,
         port=app_config.postgres_port,
         user=app_config.postgres_user,
