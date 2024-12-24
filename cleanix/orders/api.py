@@ -91,7 +91,7 @@ async def get_client_orders(
 
 @order_router.get(
     "/employee_available_orders",
-    response_model=list[OrderWithoutServices],
+    response_model=list[Order],
 )
 async def get_employee_available_orders(
     db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
@@ -99,7 +99,27 @@ async def get_employee_available_orders(
 ):
     db, conn = db_factory
     orders = await db.get_employee_available_orders(conn)
-    return [dict(raw_order.items()) for raw_order in orders]
+    order_dcts = [dict(raw_order.items()) for raw_order in orders]
+
+    service_ids = list()
+
+    for order_dct in order_dcts:
+        service_ids.extend(order_dct['services'])
+
+    service_objs = await db.get_services_by_ids(conn, list(set(service_ids)))
+    service_objs = [dict(obj.items()) for obj in service_objs]
+
+    service_objs_map = {}
+    for service_obj in service_objs:
+        service_objs_map[service_obj["id"]] = service_obj
+
+    for order_dct in order_dcts:
+        order_services = [service_objs_map[service_id] for service_id in order_dct['services']]
+        order_dct['services'] = order_services
+
+    return order_dcts
+
+
 
 @order_router.get(
     "/employee_assigned_orders",
@@ -111,7 +131,24 @@ async def get_employee_assigned_orders(
 ):
     db, conn = db_factory
     orders = await db.get_employee_assigned_orders(conn, worker.id)
-    return [dict(raw_order.items()) for raw_order in orders]
+    order_dcts =  [dict(raw_order.items()) for raw_order in orders]
+    service_ids = list()
+
+    for order_dct in order_dcts:
+        service_ids.extend(order_dct['services'])
+
+    service_objs = await db.get_services_by_ids(conn, list(set(service_ids)))
+    service_objs = [dict(obj.items()) for obj in service_objs]
+
+    service_objs_map = {}
+    for service_obj in service_objs:
+        service_objs_map[service_obj["id"]] = service_obj
+
+    for order_dct in order_dcts:
+        order_services = [service_objs_map[service_id] for service_id in order_dct['services']]
+        order_dct['services'] = order_services
+
+    return order_dcts
 
 
 @order_router.get(
