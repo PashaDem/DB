@@ -24,7 +24,7 @@ from .schema import (
     ServiceIds,
     ServiceId,
     TransportId,
-    ToolId, OrderWithServices,
+    ToolId, OrderWithServices, OrderWithoutServices,
 )
 from .exception import OrderDoesNotExist
 
@@ -91,7 +91,7 @@ async def get_client_orders(
 
 @order_router.get(
     "/employee_available_orders",
-    response_model=list[Order],
+    response_model=list[OrderWithoutServices],
 )
 async def get_employee_available_orders(
     db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
