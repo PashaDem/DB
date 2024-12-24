@@ -317,7 +317,7 @@ async def mark_order_as_in_process(
 
 @order_router.post(
     "/{order_id}/mark_as_paid",
-    response_model=Order,
+    response_model=None,
     dependencies=[Depends(check_order_mark_in_process_access)],
 )
 async def mark_order_as_paid(
@@ -337,7 +337,7 @@ async def mark_order_as_paid(
                 await db.mark_order_as_paid_by_order_id(conn, order_id=order_id)
                 await db.update_total_cost_by_order_id(conn, order_id=order_id)
                 raw_order = await db.get_order_by_id(conn, order_id=order_id)
-                return dict(raw_order.items())
+                return None
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Can't mark order as paid, because it hasn't been processed yet.",
