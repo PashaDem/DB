@@ -13,7 +13,7 @@ inner join order_to_tool ott on ott.order_id = cr.id
 inner join order_to_service ots on ots.order_id = cr.id
 inner join order_to_transport ottrans on ottrans.order_id = transport_id
 inner join public.user u on u.id = cr.client_id
-group by cr.id, cr.address, cr.clean_date, cr.client_id, cr.contract_id, cr.status;
+group by cr.id, cr.address, cr.clean_date, cr.client_id, cr.contract_id, cr.status, u.username;
 
 -- name: get_orders_by_user_id
 select cr.id, cr.status, cr.address, cr.clean_date, cr.contract_id, cr.client_id, array_agg(s.id) services, u.username from cleaning_order cr
