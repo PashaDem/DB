@@ -88,6 +88,8 @@ where ote.employee_id = :employee_id and cr.status <> 'PAID');
 
 -- name: get_employee_assigned_orders
 select cr.id, cr.client_id, cr.address, cr.clean_date, cr.contract_id, cr.status, array_agg(s.id) services, u.username from cleaning_order cr
+inner join order_to_service ote on ote.order_id = cr.id
+inner join service s on s.id = ote.service_id
 inner join public.user u on cr.client_id = u.id
 where cr.id in (
     select ote.order_id from order_to_employee ote
