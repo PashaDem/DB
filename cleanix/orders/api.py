@@ -97,7 +97,7 @@ async def get_client_orders(
 )
 async def get_employee_available_orders(
     db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
-    worker: Annotated[Employee, Depends(get_worker)],
+        worker: Annotated[Employee, Depends(get_worker)],
 ):
     db, pool = db_factory
     async with pool.acquire() as conn:
@@ -369,7 +369,7 @@ async def mark_order_as_paid(
 #  -----------------------------transport-------------------------------------------------------------
 
 
-@order_router.post("/{order_id}/add_transport", dependencies=[Depends(get_manager)])
+@order_router.post("/{order_id}/add_transport", dependencies=[Depends(get_worker)])
 async def add_transport(
     order_id: int,
     transport_info: TransportId,
@@ -405,7 +405,7 @@ async def add_transport(
         raise TransportDoesNotExist
 
 
-@order_router.post("/{order_id}/remove_transport", dependencies=[Depends(get_manager)])
+@order_router.post("/{order_id}/remove_transport", dependencies=[Depends(get_worker)])
 async def remove_transport(
     order_id: int,
     transport_info: TransportId,
@@ -442,7 +442,7 @@ async def remove_transport(
 # -------------------------------------------tools-----------------------------------------------------------
 
 
-@order_router.post("/{order_id}/add_tool", dependencies=[Depends(get_manager)])
+@order_router.post("/{order_id}/add_tool", dependencies=[Depends(get_worker)])
 async def add_tool(
     order_id: int,
     tool_info: ToolId,
@@ -474,7 +474,7 @@ async def add_tool(
         raise ToolDoesNotExist
 
 
-@order_router.post("/{order_id}/remove_tool", dependencies=[Depends(get_manager)])
+@order_router.post("/{order_id}/remove_tool", dependencies=[Depends(get_worker)])
 async def remove_tool(
     order_id: int,
     tool_info: ToolId,
