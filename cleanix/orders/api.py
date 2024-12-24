@@ -97,7 +97,6 @@ async def get_client_orders(
 )
 async def get_employee_available_orders(
     db_factory: Annotated[tuple[Queries, Connection], Depends(queries)],
-        worker: Annotated[Employee, Depends(get_worker)],
 ):
     db, pool = db_factory
     async with pool.acquire() as conn:
