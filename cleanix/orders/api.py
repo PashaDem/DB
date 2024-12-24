@@ -285,7 +285,7 @@ async def assign_order(
 
 @order_router.post(
     "/{order_id}/mark_as_in_process",
-    response_model=Order,
+    response_model=None,
     dependencies=[Depends(check_order_mark_in_process_access)],
 )
 async def mark_order_as_in_process(
@@ -304,7 +304,7 @@ async def mark_order_as_in_process(
             if not order_dict["status"] == "INPROCESS":
                 await db.mark_order_as_in_process_by_order_id(conn, order_id=order_id)
                 raw_order = await db.get_order_by_id(conn, order_id=order_id)
-                return dict(raw_order.items())
+                return
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Can't mark order as `in-process`, because it already has the same status.",
