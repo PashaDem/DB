@@ -269,7 +269,7 @@ async def assign_order(
                 await db.assign_order_by_employee_id(
                     conn, employee_id=employee.id, order_id=order_id
                 )
-                response.status_code = status.HTTP_400_BAD_REQUEST
+                response.status_code = status.HTTP_204_NO_CONTENT
                 return
             else:
                 raise HTTPException(
