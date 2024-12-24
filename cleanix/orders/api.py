@@ -55,6 +55,7 @@ async def create_order(
 
     raw_order = dict(raw_order.items())
     raw_order['services'] = services
+    raw_order['username'] = ''
     return raw_order
 
 
