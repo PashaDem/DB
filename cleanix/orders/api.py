@@ -24,7 +24,7 @@ from .schema import (
     ServiceIds,
     ServiceId,
     TransportId,
-    ToolId, OrderWithServices, OrderWithoutServices,
+    ToolId, OrderWithServices, OrderWithoutServices, OrderWithToolsAndTransport,
 )
 from .exception import OrderDoesNotExist
 
@@ -156,15 +156,33 @@ async def get_employee_assigned_orders(
 
 
 @order_router.get(
-    "/{order_id}", response_model=Order, dependencies=[Depends(check_order_read_access)]
+    "/{order_id}", response_model=OrderWithToolsAndTransport, dependencies=[Depends(check_order_read_access)]
 )
 async def get_order(
     order_id: int, db_factory: Annotated[tuple[Queries, Connection], Depends(queries)]
 ):
     db, pool = db_factory
     async with pool.acquire() as conn:
-        raw_order = await db.get_order_by_id(conn, order_id=order_id)
-        return dict(raw_order.items())
+        raw_order = await db.get_extended_order_by_id(conn, order_id=order_id)
+        order = dict(raw_order.items())
+        transport_ids = order['transport_ids']
+        tool_ids = order['tool_ids']
+        service_ids = order['service_ids']
+
+        service_objs = await db.get_services_by_ids(conn, list(set(service_ids)))
+        services = [dict(obj.items()) for obj in service_objs]
+
+        tool_objs = await db.get_tools_by_ids(conn, tool_ids)
+        tools = [dict(obj.items()) for obj in tool_objs]
+
+        transport_objs = await db.get_transports_by_ids(conn, transport_ids)
+        transports = [dict(obj.items()) for obj in transport_objs]
+
+        order['transports'] = transports
+        order['tools'] = tools
+        order['services'] = services
+
+        return order
 
 
 @order_router.delete("/{order_id}", dependencies=[Depends(check_order_delete_access)])

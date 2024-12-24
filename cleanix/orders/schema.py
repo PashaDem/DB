@@ -19,6 +19,20 @@ class OrderToSave(BaseModel):
     status: str = "INQUEUE"
 
 
+class Tool(BaseModel):
+    id: int
+    name: str
+    description: str
+    is_deregistered: bool
+
+
+class Transport(BaseModel):
+    id: int
+    name: str
+    brand: str
+    description: str
+    is_deregistered: bool
+
 
 class Order(OrderToSave):
     id: int
@@ -26,10 +40,20 @@ class Order(OrderToSave):
     username: str
     services: list[Service]
 
+
 class OrderWithoutServices(OrderToSave):
     id: int
     contract_id: int
     username: str
+
+
+class OrderWithToolsAndTransport(OrderToSave):
+    id: int
+    contract_id: int
+    username: str
+    services: list[Service]
+    tools: list[Tool]
+    transports: list[Transport]
 
 class OrderWithServices(Order):
     services: list[Service]

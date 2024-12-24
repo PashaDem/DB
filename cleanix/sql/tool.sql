@@ -33,3 +33,9 @@ FROM tool where is_deregistered = false;
 select *
 from tool
 where id = :tool_id;
+
+-- name: get_tools_by_ids
+select * from tool where id=any(:tool_ids);
+
+-- name: get_transports_by_ids
+select * from transport where id=any(:transport_ids);
